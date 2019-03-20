@@ -1,0 +1,49 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://obniz.io/js/jquery-3.2.1.min.js"></script>
+    <script src="https://unpkg.com/obniz@2.0.1/obniz.js" crossorigin="anonymous"></script>
+  </head>
+  <body>
+
+    <div id="obniz-debug"></div>
+    <h1>omron d6t-44l-06 sensor</h1>
+    <div id="print"></div>
+
+    <script>
+
+      var obniz = new Obniz("OBNIZ-ID");
+      obniz.onconnect = async function () {
+
+        var i2c = obniz.getFreeI2C();
+        obniz.io2.output(true);
+        obniz.io3.output(false);
+        i2c.start({mode:"master", sda:1, scl:0, clock:100000});
+
+        obniz.repeat(async function(){
+
+          await obniz.wait(100);    
+          i2c.write(0x0A, [0x4C]);
+          await obniz.wait(160);
+          var data = await i2c.readWait(0x0A, 35);
+          var t = [];
+
+          for(var i=2; i<34; i++){
+            t[i] = ((data[i]+(data[i+1]<<8))*0.1).toFixed(1);
+            console.log(t[i]);
+            i++
+          }
+          obniz.display.clear();
+          obniz.display.font(null,14);
+          obniz.display.print(t[2] +" "+t[4] +" "+t[6] +" "+t[8]);
+          obniz.display.print(t[10]+" "+t[12]+" "+t[14]+" "+t[16]);
+          obniz.display.print(t[18]+" "+t[20]+" "+t[22]+" "+t[24]);
+          obniz.display.print(t[26]+" "+t[28]+" "+t[30]+" "+t[32]);
+
+        }, 1000)
+      }
+
+    </script>
+  </body>
+</html>
